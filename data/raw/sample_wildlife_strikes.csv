@@ -1,0 +1,4 @@
+strike_id,incident_date,airport_code,airport_name,aircraft_type,operator_name,species_name,flight_phase,height_ft,damage_level
+SAMPLE-001,2023-08-01,JFK,John F. Kennedy International Airport,B-737,Sample Air,Canada goose,Approach,1200,Minor
+SAMPLE-002,2023-08-01,JFK,John F. Kennedy International Airport,A-320,Sample Air,Gull,Landing roll,0,None
+SAMPLE-003,2023-08-02,LGA,LaGuardia Airport,E-175,Regional Sample,Unknown bird,Take-off run,50,

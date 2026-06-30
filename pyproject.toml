@@ -1,0 +1,9 @@
+[project]
+name = "bird-strike-weather-pipeline"
+version = "0.1.0"
+description = "FAA wildlife strike weather enrichment pipeline"
+requires-python = ">=3.10"
+dependencies = []
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]

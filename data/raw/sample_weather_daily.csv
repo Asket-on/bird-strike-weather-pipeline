@@ -1,0 +1,3 @@
+airport_code,weather_date,temperature_2m_mean,precipitation_sum,wind_speed_10m_max,wind_gusts_10m_max,weather_code
+JFK,2023-08-01,25.4,0.0,18.2,31.0,1
+LGA,2023-08-02,24.8,2.1,16.5,28.4,61
