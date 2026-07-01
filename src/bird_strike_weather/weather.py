@@ -6,7 +6,7 @@ from contextlib import closing
 from pathlib import Path
 
 from .db import connect
-from .open_meteo import WeatherRequest, fetch_daily_weather
+from .open_meteo import WeatherRequest, fetch_daily_weather, fetch_daily_weather_batch
 
 
 def load_weather_csv(db_path: str | Path, csv_path: str | Path) -> int:
@@ -50,40 +50,53 @@ def load_weather_csv(db_path: str | Path, csv_path: str | Path) -> int:
 def enrich_missing_weather(db_path: str | Path, limit: int | None = None) -> int:
     requests = _missing_weather_requests(db_path, limit=limit)
     inserted = 0
+    
+    # Group requests by (start_date, end_date)
+    groups: dict[tuple[date, date], list[WeatherRequest]] = {}
+    for req in requests:
+        key = (req.start_date, req.end_date)
+        groups.setdefault(key, []).append(req)
+        
     with closing(connect(db_path)) as conn:
-        for request in requests:
-            try:
-                rows = list(fetch_daily_weather(request))
-                with conn:
-                    conn.executemany(
-                        """
-                        INSERT OR REPLACE INTO weather_daily (
-                            airport_code,
-                            weather_date,
-                            temperature_2m_mean,
-                            precipitation_sum,
-                            wind_speed_10m_max,
-                            wind_gusts_10m_max,
-                            weather_code
-                        )
-                        VALUES (?, ?, ?, ?, ?, ?, ?)
-                        """,
-                        [
-                            (
-                                row["airport_code"],
-                                row["weather_date"],
-                                row["temperature_2m_mean"],
-                                row["precipitation_sum"],
-                                row["wind_speed_10m_max"],
-                                row["wind_gusts_10m_max"],
-                                row["weather_code"],
+        for (start_date, end_date), group_reqs in groups.items():
+            # Chunk group_reqs to max 50 requests per API call to prevent URL length limits
+            chunk_size = 50
+            for i in range(0, len(group_reqs), chunk_size):
+                chunk = group_reqs[i : i + chunk_size]
+                try:
+                    rows = list(fetch_daily_weather_batch(chunk))
+                    with conn:
+                        conn.executemany(
+                            """
+                            INSERT OR REPLACE INTO weather_daily (
+                                airport_code,
+                                weather_date,
+                                temperature_2m_mean,
+                                precipitation_sum,
+                                wind_speed_10m_max,
+                                wind_gusts_10m_max,
+                                weather_code
                             )
-                            for row in rows
-                        ],
-                    )
-                inserted += len(rows)
-            except Exception as e:
-                print(f"Failed to fetch weather for {request.airport_code}: {e}")
+                            VALUES (?, ?, ?, ?, ?, ?, ?)
+                            """,
+                            [
+                                (
+                                    row["airport_code"],
+                                    row["weather_date"],
+                                    row["temperature_2m_mean"],
+                                    row["precipitation_sum"],
+                                    row["wind_speed_10m_max"],
+                                    row["wind_gusts_10m_max"],
+                                    row["weather_code"],
+                                )
+                                for row in rows
+                            ],
+                        )
+                    inserted += len(rows)
+                except Exception as e:
+                    airport_codes = [r.airport_code for r in chunk]
+                    print(f"Failed to fetch weather batch for airports {airport_codes}: {e}")
+                    
     return inserted
 
 
@@ -117,16 +130,23 @@ def _missing_weather_requests(db_path: str | Path, limit: int | None = None) -> 
     with closing(connect(db_path)) as conn:
         rows = conn.execute(query, params).fetchall()
 
-    return [
-        WeatherRequest(
-            airport_code=row["airport_code"],
-            latitude=row["latitude"],
-            longitude=row["longitude"],
-            start_date=date.fromisoformat(row["min_date"]),
-            end_date=date.fromisoformat(row["max_date"]),
-        )
-        for row in rows
-    ]
+    requests = []
+    for row in rows:
+        try:
+            start_date = date.fromisoformat(row["min_date"])
+            end_date = date.fromisoformat(row["max_date"])
+            requests.append(
+                WeatherRequest(
+                    airport_code=row["airport_code"],
+                    latitude=row["latitude"],
+                    longitude=row["longitude"],
+                    start_date=start_date,
+                    end_date=end_date,
+                )
+            )
+        except (ValueError, TypeError) as e:
+            print(f"Skipping weather request for {row.get('airport_code')} due to invalid date formats (min_date={row.get('min_date')}, max_date={row.get('max_date')}): {e}")
+    return requests
 
 
 def _normalize_weather(row: dict[str, str]) -> dict[str, object]:

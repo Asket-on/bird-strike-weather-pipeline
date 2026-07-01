@@ -112,6 +112,27 @@ class PipelineTest(unittest.TestCase):
         self.assertIn("start_date=2023-08-01", url)
         self.assertIn("temperature_2m_mean", url)
 
+    def test_open_meteo_batch_url_contains_multiple_coordinates(self) -> None:
+        from bird_strike_weather.open_meteo import build_daily_weather_batch_url
+        req1 = WeatherRequest(
+            airport_code="JFK",
+            latitude=40.6413,
+            longitude=-73.7781,
+            start_date=date(2023, 8, 1),
+            end_date=date(2023, 8, 1),
+        )
+        req2 = WeatherRequest(
+            airport_code="LGA",
+            latitude=40.7772,
+            longitude=-73.8726,
+            start_date=date(2023, 8, 1),
+            end_date=date(2023, 8, 1),
+        )
+        url = build_daily_weather_batch_url([req1, req2])
+        self.assertIn("latitude=40.6413%2C40.7772", url)
+        self.assertIn("longitude=-73.7781%2C-73.8726", url)
+        self.assertIn("start_date=2023-08-01", url)
+
 
 if __name__ == "__main__":
     unittest.main()

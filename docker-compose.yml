@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  test-runner:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ./data:/app/data
+    environment:
+      - PYTHONPATH=/app/src
+
+  airflow:
+    image: apache/airflow:2.7.2-python3.11
+    user: "${AIRFLOW_UID:-50000}:0"
+    environment:
+      - AIRFLOW__CORE__LOAD_EXAMPLES=False
+      - AIRFLOW__CORE__EXECUTOR=SequentialExecutor
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=sqlite:////opt/airflow/airflow.db
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./src:/opt/airflow/src
+      - ./sql:/opt/airflow/sql
+      - ./data:/opt/airflow/data
+    command: standalone
+    ports:
+      - "8080:8080"

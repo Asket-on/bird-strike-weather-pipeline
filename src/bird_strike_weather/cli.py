@@ -106,9 +106,14 @@ def main() -> None:
             airport_code="JFK",
             latitude=40.6413,
             longitude=-73.7781,
-            weather_date=date(2023, 8, 1),
+            start_date=date(2023, 8, 1),
+            end_date=date(2023, 8, 1),
         )
-        row = fetch_daily_weather(request)
+        rows = list(fetch_daily_weather(request))
+        if not rows:
+            print("No weather data returned.")
+            return
+        row = rows[0]
         with closing(connect(args.db)) as conn:
             with conn:
                 conn.execute(
