@@ -35,6 +35,7 @@ jobs:
           python -m bird_strike_weather.cli init-db --db data/processed/ci_test.sqlite
           python -m bird_strike_weather.cli load-airports --db data/processed/ci_test.sqlite --csv data/raw/sample_airports.csv
           python -m bird_strike_weather.cli load-strikes-csv --db data/processed/ci_test.sqlite --csv data/raw/sample_wildlife_strikes.csv
+          python -m bird_strike_weather.cli load-weather-csv --db data/processed/ci_test.sqlite --csv data/raw/sample_weather_daily.csv
           python -m bird_strike_weather.cli dq --db data/processed/ci_test.sqlite
           python -m bird_strike_weather.cli summary --db data/processed/ci_test.sqlite
           python -m bird_strike_weather.cli export-mart --db data/processed/ci_test.sqlite --output data/processed/ci_mart.csv
