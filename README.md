@@ -2,6 +2,8 @@
 updated: 2026-06-30T19:32:24+02:00
 ---
 # Bird Strike Weather Pipeline
+[![CI](https://github.com/Asket-on/bird-strike-weather-pipeline/actions/workflows/ci.yml/badge.svg)](https://github.com/Asket-on/bird-strike-weather-pipeline/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://github.com/Asket-on/bird-strike-weather-pipeline/blob/main/LICENSE)
 
 An automated Data Engineering pipeline that ingests aviation wildlife strike records and enriches them with historical daily weather data to support analysis on how weather conditions affect aircraft bird strikes.
 
