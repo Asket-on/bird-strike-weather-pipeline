@@ -5,5 +5,8 @@ description = "FAA wildlife strike weather enrichment pipeline"
 requires-python = ">=3.10"
 dependencies = []
 
+[project.scripts]
+bird-strike-pipeline = "bird_strike_weather.cli:main"
+
 [tool.pytest.ini_options]
 pythonpath = ["src"]

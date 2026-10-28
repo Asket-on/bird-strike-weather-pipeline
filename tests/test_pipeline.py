@@ -133,6 +133,21 @@ class PipelineTest(unittest.TestCase):
         self.assertIn("longitude=-73.7781%2C-73.8726", url)
         self.assertIn("start_date=2023-08-01", url)
 
+    def test_enrich_missing_weather_raises_on_complete_failure(self) -> None:
+        from unittest.mock import patch
+        from bird_strike_weather.weather import enrich_missing_weather
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            db_path = Path(tmpdir) / "test.sqlite"
+            init_db(db_path)
+            load_strikes_csv(db_path, PROJECT_ROOT / "data/raw/sample_wildlife_strikes.csv")
+            load_airports_csv(db_path, PROJECT_ROOT / "data/raw/sample_airports.csv")
+
+            with patch("bird_strike_weather.weather.fetch_daily_weather_batch", side_effect=Exception("API connection timeout")):
+                with self.assertRaises(RuntimeError) as ctx:
+                    enrich_missing_weather(db_path)
+                self.assertIn("Weather enrichment failed completely", str(ctx.exception))
+
 
 if __name__ == "__main__":
     unittest.main()

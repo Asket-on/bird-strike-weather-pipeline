@@ -14,6 +14,7 @@ services:
     image: apache/airflow:2.7.2-python3.11
     user: "${AIRFLOW_UID:-50000}:0"
     environment:
+      - PYTHONPATH=/opt/airflow/src
       - AIRFLOW__CORE__LOAD_EXAMPLES=False
       - AIRFLOW__CORE__EXECUTOR=SequentialExecutor
       - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=sqlite:////opt/airflow/airflow.db

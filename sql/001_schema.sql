@@ -50,18 +50,14 @@ SELECT
     s.airport_code,
     COUNT(*) AS strike_count,
     SUM(CASE WHEN s.damage_level IS NOT NULL AND s.damage_level <> '' THEN 1 ELSE 0 END) AS strikes_with_damage_level,
-    w.temperature_2m_mean,
-    w.precipitation_sum,
-    w.wind_speed_10m_max,
-    w.wind_gusts_10m_max
+    MAX(w.temperature_2m_mean) AS temperature_2m_mean,
+    MAX(w.precipitation_sum) AS precipitation_sum,
+    MAX(w.wind_speed_10m_max) AS wind_speed_10m_max,
+    MAX(w.wind_gusts_10m_max) AS wind_gusts_10m_max
 FROM staging_strikes AS s
 LEFT JOIN weather_daily AS w
     ON s.airport_code = w.airport_code
    AND s.incident_date = w.weather_date
 GROUP BY
     s.incident_date,
-    s.airport_code,
-    w.temperature_2m_mean,
-    w.precipitation_sum,
-    w.wind_speed_10m_max,
-    w.wind_gusts_10m_max;
+    s.airport_code;
